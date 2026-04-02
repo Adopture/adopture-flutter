@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
@@ -266,13 +267,19 @@ class Mobileanalytics {
       context: _cachedContext!,
     );
 
-    _queue.add(event);
+    unawaited(_queue.add(event).catchError((Object e) {
+      debugPrint('[Mobileanalytics] Failed to persist event to disk: $e');
+    }));
 
     if (_config.debug) {
       debugPrint('[Mobileanalytics] ${type.name}: $name');
-      _sender.flush();
+      unawaited(_sender.flush().catchError((Object e) {
+        debugPrint('[Mobileanalytics] Debug flush failed: $e');
+      }));
     } else if (_queue.length >= _config.flushAt) {
-      _sender.flush();
+      unawaited(_sender.flush().catchError((Object e) {
+        debugPrint('[Mobileanalytics] Flush failed: $e');
+      }));
     }
   }
 
@@ -287,7 +294,9 @@ class Mobileanalytics {
       },
       onAppBackgrounded: () {
         _enqueueRaw(EventType.track, 'app_backgrounded', {});
-        _sender.flush();
+        unawaited(_sender.flush().catchError((Object e) {
+          debugPrint('[Mobileanalytics] Background flush failed: $e');
+        }));
       },
     );
     _lifecycleObserver!.register();
@@ -321,7 +330,13 @@ class Mobileanalytics {
       final android = await deviceInfo.androidInfo;
       return android.id;
     }
-    return 'unknown-${DateTime.now().millisecondsSinceEpoch}';
+    // Desktop/other: persist a generated ID so it survives app restarts
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getString('mobileanalytics_device_id');
+    if (stored != null) return stored;
+    final generated = 'desktop-${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}';
+    await prefs.setString('mobileanalytics_device_id', generated);
+    return generated;
   }
 
   static void _assertInitialized() {

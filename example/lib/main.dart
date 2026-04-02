@@ -240,13 +240,22 @@ class _HomeScreenState extends State<HomeScreen> {
 // Profile Screen
 // ---------------------------------------------------------------------------
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    Mobileanalytics.screen('ProfileScreen');
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
 
+class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Mobileanalytics.screen('ProfileScreen');
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: ListView(
@@ -395,9 +404,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 // Shop Screen — simulates e-commerce events
 // ---------------------------------------------------------------------------
 
-class ShopScreen extends StatelessWidget {
+class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key});
 
+  @override
+  State<ShopScreen> createState() => _ShopScreenState();
+}
+
+class _ShopScreenState extends State<ShopScreen> {
   static const _products = [
     ('Wireless Headphones', '79.99', 'electronics'),
     ('Running Shoes', '129.00', 'sports'),
@@ -407,9 +421,13 @@ class ShopScreen extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
     Mobileanalytics.screen('ShopScreen');
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Shop')),
       body: ListView.builder(

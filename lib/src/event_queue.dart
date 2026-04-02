@@ -88,9 +88,11 @@ class EventQueue {
     if (rows.isEmpty) return;
 
     final ids = rows.map((r) => r['id'] as int).toList();
+    final placeholders = List.filled(ids.length, '?').join(',');
     await _db!.delete(
       'events',
-      where: 'id IN (${ids.join(',')})',
+      where: 'id IN ($placeholders)',
+      whereArgs: ids,
     );
   }
 

@@ -61,17 +61,17 @@ class Hashing {
   }
 
   String _dailySalt() {
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     return '${now.year}-${_pad(now.month)}-${_pad(now.day)}';
   }
 
   String _monthlySalt() {
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     return '${now.year}-${_pad(now.month)}';
   }
 
   String _retentionSalt() {
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final quarter = ((now.month - 1) ~/ 3) + 1;
     return '${now.year}-Q$quarter';
   }

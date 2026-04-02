@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mobileanalytics/mobileanalytics.dart';
 
 /// Change this to your actual app key and endpoint for real testing.
-const _testAppKey = 'ak_test1234567890abcdefgh';
+const _testAppKey = 'ak_OLTmMJbR2CWQAGsp21IXBP9F';
 const _testEndpoint = 'http://localhost:3001';
 
 void main() async {

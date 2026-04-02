@@ -215,7 +215,7 @@ class Mobileanalytics {
       hashedMonthlyId: _hashing.monthlyHash(),
       hashedRetentionId: _hashing.retentionHash(),
       sessionId: _session.sessionId,
-      timestamp: DateTime.now().toUtc().toIso8601String().split('.').first,
+      timestamp: '${DateTime.now().toUtc().toIso8601String().split('.').first}Z',
       properties: properties,
       context: _cachedContext!,
     );

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 
@@ -36,6 +37,12 @@ class BatchSender {
     http.Client? httpClient,
   }) : _httpClient = httpClient ?? http.Client();
 
+  void _log(String message) {
+    if (config.debug) {
+      debugPrint('[Mobileanalytics] $message');
+    }
+  }
+
   /// Starts the periodic flush timer.
   void start() {
     _flushTimer?.cancel();
@@ -53,6 +60,7 @@ class BatchSender {
   Future<void> flush() async {
     if (_isFlushing || queue.isEmpty) return;
     _isFlushing = true;
+    _log('Flush started (${queue.length} events in queue)');
 
     try {
       while (queue.length > 0) {
@@ -60,25 +68,32 @@ class BatchSender {
             queue.length > _maxBatchSize ? _maxBatchSize : queue.length;
         final events = queue.take(batchSize);
 
+        _log('Sending batch of ${events.length} events...');
         final result = await _sendWithRetry(events);
 
         if (result == SendResult.success) {
           await queue.removeFromDisk(events.length);
+          _log('Batch sent successfully (${events.length} events)');
         } else {
-          // Re-queue events for next attempt
+          _log('Batch failed: ${result.name} — re-queuing ${events.length} events');
           queue.requeue(events);
           break;
         }
       }
     } finally {
       _isFlushing = false;
+      _log('Flush complete (${queue.length} events remaining)');
     }
   }
 
   /// Sends a single event immediately (for debug mode).
   Future<void> sendImmediate(List<AnalyticsEvent> events) async {
-    await _send(events);
-    await queue.removeFromDisk(events.length);
+    final result = await _send(events);
+    if (result == SendResult.success) {
+      await queue.removeFromDisk(events.length);
+    } else {
+      _log('Immediate send failed: ${result.name}');
+    }
   }
 
   Future<SendResult> _sendWithRetry(List<AnalyticsEvent> events) async {
@@ -95,6 +110,7 @@ class BatchSender {
         case SendResult.networkError:
           if (attempt < _maxRetries - 1) {
             final delay = Duration(seconds: 1 << attempt); // 1, 2, 4, 8, 16
+            _log('Retry ${attempt + 1}/$_maxRetries in ${delay.inSeconds}s (${result.name})');
             await Future<void>.delayed(delay);
           }
       }
@@ -116,13 +132,15 @@ class BatchSender {
     };
 
     List<int> body;
+    final compressed = payload.length > 1024;
 
-    // GZip compress if payload >1KB
-    if (payload.length > 1024) {
+    if (compressed) {
       body = gzip.encode(utf8.encode(payload));
       headers['Content-Encoding'] = 'gzip';
+      _log('Payload: ${payload.length} bytes → ${body.length} bytes (gzip)');
     } else {
       body = utf8.encode(payload);
+      _log('Payload: ${body.length} bytes');
     }
 
     try {
@@ -132,26 +150,32 @@ class BatchSender {
         body: body,
       );
 
+      _log('HTTP ${response.statusCode} from ${uri.host}${uri.path}');
+
       if (response.statusCode == 202) {
         return SendResult.success;
       } else if (response.statusCode == 429) {
         final retryAfter = response.headers['retry-after'];
-        if (retryAfter != null) {
-          final seconds = int.tryParse(retryAfter) ?? 60;
-          await Future<void>.delayed(Duration(seconds: seconds));
-        }
+        final seconds = int.tryParse(retryAfter ?? '') ?? 60;
+        _log('Rate limited — retry after ${seconds}s');
+        await Future<void>.delayed(Duration(seconds: seconds));
         return SendResult.rateLimited;
       } else if (response.statusCode == 503) {
+        _log('Server overloaded — retry after 30s');
         await Future<void>.delayed(const Duration(seconds: 30));
         return SendResult.serverError;
       } else {
+        _log('Unexpected response: ${response.statusCode} ${response.body}');
         return SendResult.serverError;
       }
-    } on SocketException {
+    } on SocketException catch (e) {
+      _log('Network error: $e');
       return SendResult.networkError;
-    } on HttpException {
+    } on HttpException catch (e) {
+      _log('HTTP error: $e');
       return SendResult.networkError;
-    } catch (_) {
+    } catch (e) {
+      _log('Unexpected error: $e');
       return SendResult.networkError;
     }
   }

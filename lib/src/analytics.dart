@@ -164,6 +164,21 @@ class Mobileanalytics {
   /// Whether the SDK has been initialized.
   static bool get isInitialized => _instance != null;
 
+  /// Whether tracking is currently enabled.
+  static bool get isEnabled => _instance?._enabled ?? false;
+
+  /// Number of events currently in the queue.
+  static int get queueLength => _instance?._queue.length ?? 0;
+
+  /// The current session ID.
+  static String? get sessionId => _instance?._session.sessionId;
+
+  /// The current endpoint URL.
+  static String? get endpoint => _instance?._config.endpoint;
+
+  /// The cached device context (for debugging).
+  static EventContext? get deviceContext => _instance?._cachedContext;
+
   /// Shuts down the SDK, flushing remaining events.
   static Future<void> shutdown() async {
     if (_instance == null) return;

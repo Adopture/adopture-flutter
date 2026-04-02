@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' show SocketException, HttpException;
 
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
@@ -131,17 +131,9 @@ class BatchSender {
       'Idempotency-Key': _uuid.v4(),
     };
 
-    List<int> body;
-    final compressed = payload.length > 1024;
-
-    if (compressed) {
-      body = gzip.encode(utf8.encode(payload));
-      headers['Content-Encoding'] = 'gzip';
-      _log('Payload: ${payload.length} bytes → ${body.length} bytes (gzip)');
-    } else {
-      body = utf8.encode(payload);
-      _log('Payload: ${body.length} bytes');
-    }
+    // TODO: Enable gzip when backend supports Content-Encoding (MOB-62)
+    final body = utf8.encode(payload);
+    _log('Payload: ${body.length} bytes');
 
     try {
       final response = await _httpClient.post(

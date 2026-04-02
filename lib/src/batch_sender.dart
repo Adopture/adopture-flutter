@@ -86,16 +86,6 @@ class BatchSender {
     }
   }
 
-  /// Sends a single event immediately (for debug mode).
-  Future<void> sendImmediate(List<AnalyticsEvent> events) async {
-    final result = await _send(events);
-    if (result == SendResult.success) {
-      await queue.removeFromDisk(events.length);
-    } else {
-      _log('Immediate send failed: ${result.name}');
-    }
-  }
-
   Future<SendResult> _sendWithRetry(List<AnalyticsEvent> events) async {
     for (var attempt = 0; attempt < _maxRetries; attempt++) {
       final result = await _send(events);

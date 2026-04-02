@@ -224,7 +224,7 @@ class Mobileanalytics {
 
     if (_config.debug) {
       debugPrint('[Mobileanalytics] ${type.name}: $name');
-      _sender.sendImmediate([event]);
+      _sender.flush();
     } else if (_queue.length >= _config.flushAt) {
       _sender.flush();
     }

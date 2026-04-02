@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'batch_sender.dart';
 import 'config.dart';
@@ -11,6 +12,7 @@ import 'event_queue.dart';
 import 'hashing.dart';
 import 'lifecycle_observer.dart';
 import 'session_manager.dart';
+import 'super_properties.dart';
 
 /// Privacy-first mobile analytics SDK.
 ///
@@ -24,6 +26,7 @@ class Mobileanalytics {
   final BatchSender _sender;
   final SessionManager _session;
   late final Hashing _hashing;
+  final SuperProperties _superProperties;
   LifecycleObserver? _lifecycleObserver;
 
   EventContext? _cachedContext;
@@ -36,10 +39,12 @@ class Mobileanalytics {
     required EventQueue queue,
     required BatchSender sender,
     required SessionManager session,
+    required SuperProperties superProperties,
   })  : _config = config,
         _queue = queue,
         _sender = sender,
-        _session = session;
+        _session = session,
+        _superProperties = superProperties;
 
   /// Initializes the SDK. Must be called once before any tracking.
   ///
@@ -71,12 +76,15 @@ class Mobileanalytics {
 
     final sender = BatchSender(config: config, queue: queue);
     final session = SessionManager();
+    final superProps = SuperProperties();
+    await superProps.load();
 
     final instance = Mobileanalytics._(
       config: config,
       queue: queue,
       sender: sender,
       session: session,
+      superProperties: superProps,
     );
 
     // Collect device context
@@ -87,6 +95,9 @@ class Mobileanalytics {
     instance._hashing = Hashing(deviceId: deviceId, appKey: appKey);
 
     _instance = instance;
+
+    // Detect app install / update
+    await instance._trackInstallOrUpdate();
 
     // Start auto-capture if enabled
     if (autoCapture) {
@@ -161,6 +172,35 @@ class Mobileanalytics {
     _instance!._sender.start();
   }
 
+  /// Registers super properties that are sent with every event.
+  /// Overwrites existing keys with the same name.
+  static Future<void> registerSuperProperties(Map<String, String> properties) async {
+    _assertInitialized();
+    await _instance!._superProperties.register(properties);
+  }
+
+  /// Registers super properties only if the key is not already set.
+  static Future<void> registerSuperPropertiesOnce(Map<String, String> properties) async {
+    _assertInitialized();
+    await _instance!._superProperties.registerOnce(properties);
+  }
+
+  /// Removes a single super property.
+  static Future<void> unregisterSuperProperty(String key) async {
+    _assertInitialized();
+    await _instance!._superProperties.unregister(key);
+  }
+
+  /// Clears all super properties.
+  static Future<void> clearSuperProperties() async {
+    _assertInitialized();
+    await _instance!._superProperties.clear();
+  }
+
+  /// Returns a read-only view of current super properties.
+  static Map<String, String> get superProperties =>
+      _instance?._superProperties.all ?? {};
+
   /// Whether the SDK has been initialized.
   static bool get isInitialized => _instance != null;
 
@@ -208,6 +248,12 @@ class Mobileanalytics {
     String name,
     Map<String, String> properties,
   ) {
+    // Merge: super props as base, event props override
+    final mergedProps = {
+      ..._superProperties.all,
+      ...properties,
+    };
+
     final event = AnalyticsEvent(
       type: type,
       name: name,
@@ -216,7 +262,7 @@ class Mobileanalytics {
       hashedRetentionId: _hashing.retentionHash(),
       sessionId: _session.sessionId,
       timestamp: '${DateTime.now().toUtc().toIso8601String().split('.').first}Z',
-      properties: properties,
+      properties: mergedProps,
       context: _cachedContext!,
     );
 
@@ -245,6 +291,25 @@ class Mobileanalytics {
       },
     );
     _lifecycleObserver!.register();
+  }
+
+  Future<void> _trackInstallOrUpdate() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedVersion = prefs.getString('mobileanalytics_app_version');
+    final currentVersion = _cachedContext!.appVersion;
+
+    if (storedVersion == null) {
+      _enqueueRaw(EventType.track, 'app_installed', {
+        'version': currentVersion,
+      });
+    } else if (storedVersion != currentVersion) {
+      _enqueueRaw(EventType.track, 'app_updated', {
+        'previous_version': storedVersion,
+        'version': currentVersion,
+      });
+    }
+
+    await prefs.setString('mobileanalytics_app_version', currentVersion);
   }
 
   static Future<String> _resolveDeviceId() async {

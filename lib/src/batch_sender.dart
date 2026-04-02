@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show SocketException, HttpException;
+import 'dart:math';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
@@ -22,20 +24,27 @@ enum SendResult {
 class BatchSender {
   static const _maxBatchSize = 100;
   static const _maxRetries = 5;
+  static const _maxBackoffMs = 30000;
   static const _uuid = Uuid();
+  static final _random = Random();
 
   final AnalyticsConfig config;
   final EventQueue queue;
   final http.Client _httpClient;
+  final Connectivity _connectivity;
 
   Timer? _flushTimer;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   bool _isFlushing = false;
+  bool _wasOffline = false;
 
   BatchSender({
     required this.config,
     required this.queue,
     http.Client? httpClient,
-  }) : _httpClient = httpClient ?? http.Client();
+    Connectivity? connectivity,
+  })  : _httpClient = httpClient ?? http.Client(),
+        _connectivity = connectivity ?? Connectivity();
 
   void _log(String message) {
     if (config.debug) {
@@ -43,22 +52,50 @@ class BatchSender {
     }
   }
 
-  /// Starts the periodic flush timer.
+  /// Starts the periodic flush timer and connectivity listener.
   void start() {
     _flushTimer?.cancel();
+    _connectivitySub?.cancel();
+
     if (config.debug) return; // Debug mode sends immediately
+
     _flushTimer = Timer.periodic(config.flushInterval, (_) => flush());
+
+    // Flush immediately when connectivity returns after being offline
+    _connectivitySub = _connectivity.onConnectivityChanged.listen((results) {
+      final isOffline = results.every((r) => r == ConnectivityResult.none);
+      if (_wasOffline && !isOffline) {
+        _log('Network restored — flushing queued events');
+        flush();
+      }
+      _wasOffline = isOffline;
+    });
   }
 
-  /// Stops the periodic flush timer.
+  /// Stops the periodic flush timer and connectivity listener.
   void stop() {
     _flushTimer?.cancel();
     _flushTimer = null;
+    _connectivitySub?.cancel();
+    _connectivitySub = null;
   }
 
   /// Flushes all queued events to the server.
   Future<void> flush() async {
     if (_isFlushing || queue.isEmpty) return;
+
+    // Skip flush if no network available
+    try {
+      final connectivity = await _connectivity.checkConnectivity();
+      if (connectivity.every((r) => r == ConnectivityResult.none)) {
+        _log('No network — skipping flush (${queue.length} events queued)');
+        _wasOffline = true;
+        return;
+      }
+    } catch (_) {
+      // connectivity_plus may fail on some platforms — proceed with flush
+    }
+
     _isFlushing = true;
     _log('Flush started (${queue.length} events in queue)');
 
@@ -99,8 +136,11 @@ class BatchSender {
         case SendResult.serverError:
         case SendResult.networkError:
           if (attempt < _maxRetries - 1) {
-            final delay = Duration(seconds: 1 << attempt); // 1, 2, 4, 8, 16
-            _log('Retry ${attempt + 1}/$_maxRetries in ${delay.inSeconds}s (${result.name})');
+            // Full jitter: random(0, min(cap, base * 2^attempt))
+            final maxMs = min((1 << attempt) * 1000, _maxBackoffMs);
+            final jitteredMs = _random.nextInt(maxMs);
+            final delay = Duration(milliseconds: jitteredMs);
+            _log('Retry ${attempt + 1}/$_maxRetries in ${delay.inMilliseconds}ms (${result.name})');
             await Future<void>.delayed(delay);
           }
       }

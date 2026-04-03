@@ -1,6 +1,6 @@
 name: example_app
 description: Mobileanalytics SDK test app with multiple screens and test scenarios.
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:

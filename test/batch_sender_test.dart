@@ -51,7 +51,6 @@ class FakeEventQueue extends Fake implements EventQueue {
 
 AdoptureConfig _config({bool debug = false}) => AdoptureConfig(
       appKey: 'ak_ABCDEFGHIJKLMNOPqrstuv01',
-      endpoint: 'https://api.test.com',
       debug: debug,
     );
 
@@ -149,7 +148,7 @@ void main() {
       final sender = _sender(client: client);
       await sender.flush();
 
-      expect(sentUri.toString(), 'https://api.test.com/api/v1/events');
+      expect(sentUri.toString(), 'https://api.adopture.com/api/v1/events');
       expect(sentHeaders!['content-type'], contains('application/json'));
       expect(sentHeaders!.containsKey('idempotency-key'), isTrue);
       sender.dispose();

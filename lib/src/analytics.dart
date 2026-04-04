@@ -14,6 +14,7 @@ import 'go_router_observer.dart';
 import 'hashing.dart';
 import 'lifecycle_observer.dart';
 import 'navigation_observer.dart';
+import 'revenue.dart';
 import 'session_manager.dart';
 import 'super_properties.dart';
 
@@ -55,7 +56,6 @@ class Adopture {
   /// ```
   static Future<void> init({
     required String appKey,
-    String endpoint = 'https://api.adopture.com',
     bool debug = false,
     bool autoCapture = true,
     Duration flushInterval = const Duration(seconds: 30),
@@ -65,7 +65,6 @@ class Adopture {
   }) async {
     final config = AdoptureConfig(
       appKey: appKey,
-      endpoint: endpoint,
       debug: debug,
       autoCapture: autoCapture,
       flushInterval: flushInterval,
@@ -140,6 +139,150 @@ class Adopture {
     _assertInitialized();
     if (!_instance!._enabled) return;
     _instance!._enqueue(EventType.screen, name, properties ?? {});
+  }
+
+  // --- Revenue Tracking ---
+
+  /// Tracks a revenue event.
+  ///
+  /// ```dart
+  /// Adopture.trackRevenue(RevenueData(
+  ///   eventType: RevenueEventType.initialPurchase,
+  ///   productId: 'com.app.premium_monthly',
+  ///   price: 9.99,
+  ///   currency: 'USD',
+  /// ));
+  /// ```
+  static void trackRevenue(RevenueData revenue) {
+    _assertInitialized();
+    if (!_instance!._enabled) return;
+    revenue.validate();
+    _instance!._enqueueRevenue(revenue);
+  }
+
+  /// Tracks an initial purchase (one-time or first subscription).
+  static void trackPurchase({
+    required String productId,
+    required double price,
+    required String currency,
+    String? transactionId,
+    Store? store,
+  }) {
+    trackRevenue(RevenueData(
+      eventType: RevenueEventType.initialPurchase,
+      productId: productId,
+      price: price,
+      currency: currency,
+      transactionId: transactionId,
+      store: store,
+    ));
+  }
+
+  /// Tracks a one-time (non-recurring) purchase.
+  static void trackOneTimePurchase({
+    required String productId,
+    required double price,
+    required String currency,
+    String? transactionId,
+    Store? store,
+  }) {
+    trackRevenue(RevenueData(
+      eventType: RevenueEventType.nonRenewingPurchase,
+      productId: productId,
+      price: price,
+      currency: currency,
+      transactionId: transactionId,
+      store: store,
+    ));
+  }
+
+  /// Tracks a subscription renewal.
+  static void trackRenewal({
+    required String productId,
+    required double price,
+    required String currency,
+    String? transactionId,
+    Store? store,
+    String? expirationAt,
+  }) {
+    trackRevenue(RevenueData(
+      eventType: RevenueEventType.renewal,
+      productId: productId,
+      price: price,
+      currency: currency,
+      transactionId: transactionId,
+      store: store,
+      expirationAt: expirationAt,
+    ));
+  }
+
+  /// Tracks the start of a free trial.
+  static void trackTrialStarted({
+    required String productId,
+    Store? store,
+    String? expirationAt,
+  }) {
+    trackRevenue(RevenueData(
+      eventType: RevenueEventType.trialStarted,
+      productId: productId,
+      price: 0,
+      currency: 'USD',
+      isTrial: true,
+      periodType: 'TRIAL',
+      store: store,
+      expirationAt: expirationAt,
+    ));
+  }
+
+  /// Tracks a trial-to-paid conversion.
+  static void trackTrialConverted({
+    required String productId,
+    required double price,
+    required String currency,
+    String? transactionId,
+    Store? store,
+  }) {
+    trackRevenue(RevenueData(
+      eventType: RevenueEventType.trialConverted,
+      productId: productId,
+      price: price,
+      currency: currency,
+      transactionId: transactionId,
+      isTrialConversion: true,
+      store: store,
+    ));
+  }
+
+  /// Tracks a subscription cancellation.
+  static void trackCancellation({
+    required String productId,
+    Store? store,
+  }) {
+    trackRevenue(RevenueData(
+      eventType: RevenueEventType.cancellation,
+      productId: productId,
+      price: 0,
+      currency: 'USD',
+      store: store,
+    ));
+  }
+
+  /// Tracks a refund.
+  static void trackRefund({
+    required String productId,
+    required double price,
+    required String currency,
+    String? transactionId,
+    Store? store,
+  }) {
+    trackRevenue(RevenueData(
+      eventType: RevenueEventType.refund,
+      productId: productId,
+      price: price,
+      currency: currency,
+      transactionId: transactionId,
+      store: store,
+    ));
   }
 
   /// Associates a user ID with all subsequent events.
@@ -257,8 +400,8 @@ class Adopture {
   /// The current session ID.
   static String? get sessionId => _instance?._session.sessionId;
 
-  /// The current endpoint URL.
-  static String? get endpoint => _instance?._config.endpoint;
+  /// The API endpoint URL (fixed).
+  static String get endpoint => AdoptureConfig.apiEndpoint;
 
   /// The cached device context (for debugging).
   static EventContext? get deviceContext => _instance?._cachedContext;
@@ -370,6 +513,79 @@ class Adopture {
         debugPrint('[Adopture] Flush failed: $e');
       }));
     }
+  }
+
+  void _enqueueRevenue(RevenueData revenue) {
+    final newSession = _session.rotateIfNeeded();
+    if (newSession && _config.autoCapture) {
+      _enqueueRaw(EventType.track, 'session_start', {});
+    }
+    _session.touch();
+
+    if (_userId == null && _config.debug) {
+      debugPrint(
+        '[Adopture] Warning: trackRevenue called without identify(). '
+        'Revenue events without a user_id have limited analytics value.',
+      );
+    }
+
+    // Auto-detect store from platform if not specified
+    final effectiveStore = revenue.store ?? _detectStore();
+
+    final mergedProps = {
+      ..._superProperties.all,
+    };
+
+    final event = AnalyticsEvent(
+      type: EventType.revenue,
+      name: revenue.eventType.toBackendString(),
+      hashedDailyId: _hashing.dailyHash(),
+      hashedMonthlyId: _hashing.monthlyHash(),
+      hashedRetentionId: _hashing.retentionHash(),
+      sessionId: _session.sessionId,
+      timestamp:
+          '${DateTime.now().toUtc().toIso8601String().split('.').first}Z',
+      properties: mergedProps,
+      context: _cachedContext!,
+      userId: _userId,
+      revenue: RevenueData(
+        eventType: revenue.eventType,
+        productId: revenue.productId,
+        price: revenue.price,
+        currency: revenue.currency,
+        quantity: revenue.quantity,
+        transactionId: revenue.transactionId,
+        store: effectiveStore,
+        isTrial: revenue.isTrial,
+        isTrialConversion: revenue.isTrialConversion,
+        periodType: revenue.periodType,
+        expirationAt: revenue.expirationAt,
+      ),
+    );
+
+    unawaited(_queue.add(event).catchError((Object e) {
+      debugPrint('[Adopture] Failed to persist revenue event to disk: $e');
+    }));
+
+    if (_config.debug) {
+      debugPrint(
+        '[Adopture] revenue: ${revenue.eventType.toBackendString()} '
+        '${revenue.productId} ${revenue.price} ${revenue.currency}',
+      );
+      unawaited(_sender.flush().catchError((Object e) {
+        debugPrint('[Adopture] Debug flush failed: $e');
+      }));
+    } else if (_queue.length >= _config.flushAt) {
+      unawaited(_sender.flush().catchError((Object e) {
+        debugPrint('[Adopture] Flush failed: $e');
+      }));
+    }
+  }
+
+  static Store _detectStore() {
+    if (Platform.isIOS || Platform.isMacOS) return Store.appStore;
+    if (Platform.isAndroid) return Store.playStore;
+    return Store.other;
   }
 
   void _setupAutoCapture() {

@@ -14,3 +14,4 @@ export 'src/analytics.dart' show Adopture;
 export 'src/config.dart' show AdoptureConfig;
 export 'src/event.dart' show AnalyticsEvent, EventContext, EventType;
 export 'src/navigation_observer.dart' show AdoptureNavigationObserver;
+export 'src/revenue.dart' show RevenueData, RevenueEventType, Store;

@@ -3,16 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:adopture/adopture.dart';
 
-/// Change this to your actual app key and endpoint for real testing.
+/// Change this to your actual app key for real testing.
 const _testAppKey = 'ak_OLTmMJbR2CWQAGsp21IXBP9F';
-const _testEndpoint = 'http://localhost:3001';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Adopture.init(
     appKey: _testAppKey,
-    endpoint: _testEndpoint,
     debug: true,
     autoCapture: true,
     flushInterval: const Duration(seconds: 10),
@@ -128,6 +126,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   label: 'Shop',
                   icon: Icons.shopping_cart,
                   onTap: () => _navigateTo(context, const ShopScreen()),
+                ),
+                _NavChip(
+                  label: 'Revenue',
+                  icon: Icons.attach_money,
+                  onTap: () => _navigateTo(context, const RevenueDemoScreen()),
                 ),
                 _NavChip(
                   label: 'Stress Test',
@@ -495,6 +498,163 @@ class _ShopScreenState extends State<ShopScreen> {
 }
 
 // ---------------------------------------------------------------------------
+// Revenue Demo Screen — demonstrates SDK revenue tracking methods
+// ---------------------------------------------------------------------------
+
+class RevenueDemoScreen extends StatefulWidget {
+  const RevenueDemoScreen({super.key});
+
+  @override
+  State<RevenueDemoScreen> createState() => _RevenueDemoScreenState();
+}
+
+class _RevenueDemoScreenState extends State<RevenueDemoScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Adopture.screen('RevenueDemoScreen');
+  }
+
+  void _show(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Revenue Tracking')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const Text(
+            'Test revenue tracking methods',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          _ActionButton(
+            label: 'Track Purchase',
+            icon: Icons.shopping_cart_checkout,
+            onPressed: () {
+              Adopture.trackPurchase(
+                productId: 'com.example.premium_monthly',
+                price: 9.99,
+                currency: 'USD',
+                transactionId: 'txn_${DateTime.now().millisecondsSinceEpoch}',
+              );
+              _show('Tracked: purchase \$9.99 USD');
+            },
+          ),
+          const SizedBox(height: 8),
+          _ActionButton(
+            label: 'Track One-Time Purchase',
+            icon: Icons.sell,
+            onPressed: () {
+              Adopture.trackOneTimePurchase(
+                productId: 'com.example.lifetime_access',
+                price: 49.99,
+                currency: 'USD',
+                transactionId: 'txn_${DateTime.now().millisecondsSinceEpoch}',
+              );
+              _show('Tracked: one-time purchase \$49.99 USD');
+            },
+          ),
+          const SizedBox(height: 8),
+          _ActionButton(
+            label: 'Track Renewal',
+            icon: Icons.autorenew,
+            onPressed: () {
+              Adopture.trackRenewal(
+                productId: 'com.example.premium_monthly',
+                price: 9.99,
+                currency: 'USD',
+                transactionId: 'txn_${DateTime.now().millisecondsSinceEpoch}',
+              );
+              _show('Tracked: renewal \$9.99 USD');
+            },
+          ),
+          const SizedBox(height: 8),
+          _ActionButton(
+            label: 'Track Trial Started',
+            icon: Icons.free_breakfast,
+            onPressed: () {
+              Adopture.trackTrialStarted(
+                productId: 'com.example.premium_monthly',
+                expirationAt: DateTime.now()
+                    .add(const Duration(days: 7))
+                    .toUtc()
+                    .toIso8601String(),
+              );
+              _show('Tracked: trial started (7 days)');
+            },
+          ),
+          const SizedBox(height: 8),
+          _ActionButton(
+            label: 'Track Trial Converted',
+            icon: Icons.check_circle,
+            color: Colors.green,
+            onPressed: () {
+              Adopture.trackTrialConverted(
+                productId: 'com.example.premium_monthly',
+                price: 9.99,
+                currency: 'USD',
+                transactionId: 'txn_${DateTime.now().millisecondsSinceEpoch}',
+              );
+              _show('Tracked: trial converted \$9.99 USD');
+            },
+          ),
+          const SizedBox(height: 8),
+          _ActionButton(
+            label: 'Track Cancellation',
+            icon: Icons.cancel,
+            color: Colors.orange,
+            onPressed: () {
+              Adopture.trackCancellation(
+                productId: 'com.example.premium_monthly',
+              );
+              _show('Tracked: cancellation');
+            },
+          ),
+          const SizedBox(height: 8),
+          _ActionButton(
+            label: 'Track Refund',
+            icon: Icons.money_off,
+            color: Colors.red,
+            onPressed: () {
+              Adopture.trackRefund(
+                productId: 'com.example.premium_monthly',
+                price: 9.99,
+                currency: 'USD',
+                transactionId: 'txn_${DateTime.now().millisecondsSinceEpoch}',
+              );
+              _show('Tracked: refund \$9.99 USD');
+            },
+          ),
+          const SizedBox(height: 8),
+          _ActionButton(
+            label: 'Track Custom Revenue',
+            icon: Icons.code,
+            onPressed: () {
+              Adopture.trackRevenue(const RevenueData(
+                eventType: RevenueEventType.nonRenewingPurchase,
+                productId: 'com.example.coin_pack_500',
+                price: 4.99,
+                currency: 'EUR',
+                quantity: 2,
+                store: Store.appStore,
+              ));
+              _show('Tracked: custom revenue 2x €4.99 EUR');
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Stress Test Screen — batch events, offline simulation, etc.
 // ---------------------------------------------------------------------------
 
@@ -742,7 +902,7 @@ class _SdkStateCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             _InfoRow('Session', _truncate(Adopture.sessionId, 20)),
-            _InfoRow('Endpoint', Adopture.endpoint ?? '-'),
+            _InfoRow('Endpoint', Adopture.endpoint),
             if (ctx != null) ...[
               _InfoRow('Device', '${ctx.os} ${ctx.osVersion} · ${ctx.deviceType}'),
               _InfoRow('App', 'v${ctx.appVersion} · ${ctx.locale}'),
@@ -886,7 +1046,7 @@ class _SdkInfoTile extends StatelessWidget {
           _InfoRow('Enabled', '${Adopture.isEnabled}'),
           _InfoRow('Queue', '${Adopture.queueLength}'),
           _InfoRow('Session', _truncate(Adopture.sessionId, 20)),
-          _InfoRow('Endpoint', Adopture.endpoint ?? '-'),
+          _InfoRow('Endpoint', Adopture.endpoint),
         ],
       ),
     );

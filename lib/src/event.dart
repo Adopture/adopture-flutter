@@ -1,7 +1,10 @@
+import 'revenue.dart';
+
 /// Event types matching the backend schema.
 enum EventType {
   track,
-  screen;
+  screen,
+  revenue;
 
   String toJson() => name;
 }
@@ -63,6 +66,9 @@ class AnalyticsEvent {
   /// May be hashed or raw depending on [AdoptureConfig.hashUserIds].
   final String? userId;
 
+  /// Revenue data — only present when [type] is [EventType.revenue].
+  final RevenueData? revenue;
+
   const AnalyticsEvent({
     required this.type,
     required this.name,
@@ -74,6 +80,7 @@ class AnalyticsEvent {
     this.properties = const {},
     required this.context,
     this.userId,
+    this.revenue,
   });
 
   Map<String, dynamic> toJson() => {
@@ -87,6 +94,7 @@ class AnalyticsEvent {
     'properties': properties,
     'context': context.toJson(),
     if (userId != null) 'user_id': userId,
+    if (revenue != null) 'revenue': revenue!.toJson(),
   };
 
   factory AnalyticsEvent.fromJson(Map<String, dynamic> json) =>
@@ -107,5 +115,8 @@ class AnalyticsEvent {
           json['context'] as Map<String, dynamic>,
         ),
         userId: json['user_id'] as String?,
+        revenue: json['revenue'] != null
+            ? RevenueData.fromJson(json['revenue'] as Map<String, dynamic>)
+            : null,
       );
 }

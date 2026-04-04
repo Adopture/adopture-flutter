@@ -24,14 +24,6 @@ void main() {
       expect(() => config.validate(), throwsArgumentError);
     });
 
-    test('rejects empty endpoint', () {
-      const config = AdoptureConfig(
-        appKey: 'ak_abcdefghijklmnopqrstuvwx',
-        endpoint: '',
-      );
-      expect(() => config.validate(), throwsArgumentError);
-    });
-
     test('rejects flushAt out of range', () {
       const config = AdoptureConfig(
         appKey: 'ak_abcdefghijklmnopqrstuvwx',

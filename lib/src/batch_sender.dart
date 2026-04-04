@@ -155,7 +155,7 @@ class BatchSender {
       'events': events.map((e) => e.toJson()).toList(),
     });
 
-    final uri = Uri.parse('${config.endpoint}/api/v1/events');
+    final uri = Uri.parse('${AdoptureConfig.apiEndpoint}/api/v1/events');
     final headers = <String, String>{
       'Content-Type': 'application/json',
       'Idempotency-Key': _uuid.v4(),

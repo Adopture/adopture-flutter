@@ -1,10 +1,10 @@
 /// Configuration for the Adopture analytics SDK.
 class AdoptureConfig {
+  /// The fixed API endpoint URL. Not configurable — all events go here.
+  static const String apiEndpoint = 'https://api.adopture.com';
+
   /// The app key for authentication (format: ak_XXXXXXXXXXXXXXXXXXXXXXXX).
   final String appKey;
-
-  /// The API endpoint URL.
-  final String endpoint;
 
   /// Whether to enable debug mode (logs events, sends immediately).
   final bool debug;
@@ -35,7 +35,6 @@ class AdoptureConfig {
 
   const AdoptureConfig({
     required this.appKey,
-    this.endpoint = 'https://api.adopture.com',
     this.debug = false,
     this.autoCapture = true,
     this.flushInterval = const Duration(seconds: 30),
@@ -52,9 +51,6 @@ class AdoptureConfig {
       throw ArgumentError(
         'Invalid appKey format. Expected: ak_ followed by 24 alphanumeric characters.',
       );
-    }
-    if (endpoint.isEmpty) {
-      throw ArgumentError('Endpoint must not be empty.');
     }
     if (flushAt < 1 || flushAt > 100) {
       throw ArgumentError('flushAt must be between 1 and 100.');

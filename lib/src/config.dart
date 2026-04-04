@@ -24,6 +24,15 @@ class AdoptureConfig {
   /// SDK version string sent with each request.
   final String sdkVersion;
 
+  /// Whether to hash user IDs before sending.
+  ///
+  /// When `true` (default), `identify(userId)` sends `SHA256(userId + appKey)`
+  /// — consistent with the privacy-first design.
+  ///
+  /// Set to `false` if you need raw user IDs on the server, e.g. for matching
+  /// with RevenueCat subscription data.
+  final bool hashUserIds;
+
   const AdoptureConfig({
     required this.appKey,
     this.endpoint = 'https://api.adopture.com',
@@ -33,6 +42,7 @@ class AdoptureConfig {
     this.flushAt = 20,
     this.maxQueueSize = 1000,
     this.sdkVersion = '0.1.0',
+    this.hashUserIds = true,
   });
 
   /// Validates the configuration.

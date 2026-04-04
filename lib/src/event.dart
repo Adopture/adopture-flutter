@@ -59,6 +59,10 @@ class AnalyticsEvent {
   final Map<String, String> properties;
   final EventContext context;
 
+  /// Authenticated user ID, or `null` for anonymous events.
+  /// May be hashed or raw depending on [AdoptureConfig.hashUserIds].
+  final String? userId;
+
   const AnalyticsEvent({
     required this.type,
     required this.name,
@@ -69,6 +73,7 @@ class AnalyticsEvent {
     required this.timestamp,
     this.properties = const {},
     required this.context,
+    this.userId,
   });
 
   Map<String, dynamic> toJson() => {
@@ -81,6 +86,7 @@ class AnalyticsEvent {
     'timestamp': timestamp,
     'properties': properties,
     'context': context.toJson(),
+    if (userId != null) 'user_id': userId,
   };
 
   factory AnalyticsEvent.fromJson(Map<String, dynamic> json) =>
@@ -100,5 +106,6 @@ class AnalyticsEvent {
         context: EventContext.fromJson(
           json['context'] as Map<String, dynamic>,
         ),
+        userId: json['user_id'] as String?,
       );
 }

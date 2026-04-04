@@ -33,7 +33,6 @@ class Adopture {
   LifecycleObserver? _lifecycleObserver;
 
   EventContext? _cachedContext;
-  // ignore: unused_field — reserved for future RevenueCat attribution
   String? _userId;
   bool _enabled = true;
 
@@ -62,6 +61,7 @@ class Adopture {
     Duration flushInterval = const Duration(seconds: 30),
     int flushAt = 20,
     int maxQueueSize = 1000,
+    bool hashUserIds = true,
   }) async {
     final config = AdoptureConfig(
       appKey: appKey,
@@ -71,6 +71,7 @@ class Adopture {
       flushInterval: flushInterval,
       flushAt: flushAt,
       maxQueueSize: maxQueueSize,
+      hashUserIds: hashUserIds,
     );
     config.validate();
 
@@ -98,6 +99,10 @@ class Adopture {
     instance._hashing = Hashing(deviceId: deviceId, appKey: appKey);
 
     _instance = instance;
+
+    // Restore persisted user identity (survives app restart)
+    final idPrefs = await SharedPreferences.getInstance();
+    instance._userId = idPrefs.getString('adopture_user_id');
 
     // Detect app install / update
     await instance._trackInstallOrUpdate();
@@ -137,13 +142,47 @@ class Adopture {
     _instance!._enqueue(EventType.screen, name, properties ?? {});
   }
 
-  /// Associates a user ID with subsequent events.
+  /// Associates a user ID with all subsequent events.
   ///
-  /// The ID is stored locally — it is not hashed or sent to the server.
-  /// Use this for future features like RevenueCat attribution.
-  static void identify(String userId) {
+  /// The ID is persisted across app restarts. By default it is hashed
+  /// with `SHA256(userId + appKey)` before sending. Set `hashUserIds: false`
+  /// in [init] to send raw IDs (e.g. for RevenueCat matching).
+  ///
+  /// Does **not** start a new session — the user is the same person
+  /// before and after authentication.
+  ///
+  /// ```dart
+  /// Adopture.identify(firebaseUser.uid);
+  /// ```
+  static Future<void> identify(String userId) async {
     _assertInitialized();
-    _instance!._userId = userId;
+    final effectiveId = _instance!._config.hashUserIds
+        ? _instance!._hashing.hashUserId(userId)
+        : userId;
+    _instance!._userId = effectiveId;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('adopture_user_id', effectiveId);
+
+    if (_instance!._config.debug) {
+      debugPrint('[Adopture] identify: ${effectiveId.substring(0, 8)}...');
+    }
+  }
+
+  /// Clears the user identity without affecting the session or queue.
+  ///
+  /// Use this on logout / account switch. Subsequent events will be
+  /// anonymous until [identify] is called again.
+  ///
+  /// For a full state reset (identity + session + queue), use [reset].
+  static Future<void> logout() async {
+    _assertInitialized();
+    _instance!._userId = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('adopture_user_id');
+
+    if (_instance!._config.debug) {
+      debugPrint('[Adopture] logout: user identity cleared');
+    }
   }
 
   /// Flushes all queued events to the server immediately.
@@ -152,12 +191,14 @@ class Adopture {
     await _instance!._sender.flush();
   }
 
-  /// Resets all local state: clears queue, user ID, and starts a new session.
+  /// Resets all local state: clears user identity, queue, and starts a new session.
   static Future<void> reset() async {
     _assertInitialized();
     _instance!._userId = null;
     _instance!._session.startNewSession();
     await _instance!._queue.clear();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('adopture_user_id');
   }
 
   /// Disables all tracking (opt-out).
@@ -312,6 +353,7 @@ class Adopture {
       timestamp: '${DateTime.now().toUtc().toIso8601String().split('.').first}Z',
       properties: mergedProps,
       context: _cachedContext!,
+      userId: _userId,
     );
 
     unawaited(_queue.add(event).catchError((Object e) {

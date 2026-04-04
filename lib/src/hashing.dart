@@ -76,5 +76,15 @@ class Hashing {
     return '${now.year}-Q$quarter';
   }
 
+  /// SHA256(userId + appKey) — stable hash, no date rotation.
+  ///
+  /// Unlike daily/monthly hashes, this has no date salt so the same
+  /// userId always produces the same hash. This is intentional: user
+  /// identity must be stable across time.
+  String hashUserId(String userId) {
+    final input = '$userId$_appKey';
+    return sha256.convert(utf8.encode(input)).toString();
+  }
+
   String _pad(int n) => n.toString().padLeft(2, '0');
 }

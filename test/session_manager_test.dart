@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:mobileanalytics/src/session_manager.dart';
+import 'package:adopture/src/session_manager.dart';
 
 void main() {
   group('SessionManager', () {

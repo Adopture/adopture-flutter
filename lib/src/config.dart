@@ -1,5 +1,5 @@
-/// Configuration for the analytics SDK.
-class AnalyticsConfig {
+/// Configuration for the Adopture analytics SDK.
+class AdoptureConfig {
   /// The app key for authentication (format: ak_XXXXXXXXXXXXXXXXXXXXXXXX).
   final String appKey;
 
@@ -24,9 +24,9 @@ class AnalyticsConfig {
   /// SDK version string sent with each request.
   final String sdkVersion;
 
-  const AnalyticsConfig({
+  const AdoptureConfig({
     required this.appKey,
-    this.endpoint = 'https://api.mobileanalytics.app',
+    this.endpoint = 'https://api.adopture.com',
     this.debug = false,
     this.autoCapture = true,
     this.flushInterval = const Duration(seconds: 30),

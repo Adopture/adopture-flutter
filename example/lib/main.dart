@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:mobileanalytics/mobileanalytics.dart';
+import 'package:adopture/adopture.dart';
 
 /// Change this to your actual app key and endpoint for real testing.
 const _testAppKey = 'ak_OLTmMJbR2CWQAGsp21IXBP9F';
@@ -10,7 +10,7 @@ const _testEndpoint = 'http://localhost:3001';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Mobileanalytics.init(
+  await Adopture.init(
     appKey: _testAppKey,
     endpoint: _testEndpoint,
     debug: true,
@@ -20,7 +20,7 @@ void main() async {
     maxQueueSize: 500,
   );
 
-  Mobileanalytics.identify('test-user-001');
+  Adopture.identify('test-user-001');
 
   runApp(const TestApp());
 }
@@ -67,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    Mobileanalytics.screen('HomeScreen');
+    Adopture.screen('HomeScreen');
     _refreshTimer = Timer.periodic(
       const Duration(seconds: 1),
       (_) => setState(() {}),
@@ -151,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   label: 'Track Event',
                   icon: Icons.touch_app,
                   onPressed: () {
-                    Mobileanalytics.track('button_clicked', {
+                    Adopture.track('button_clicked', {
                       'screen': 'home',
                       'variant': 'primary',
                     });
@@ -162,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   label: 'Flush',
                   icon: Icons.send,
                   onPressed: () async {
-                    await Mobileanalytics.flush();
+                    await Adopture.flush();
                     _log('flush: manual');
                   },
                 ),
@@ -171,24 +171,24 @@ class _HomeScreenState extends State<HomeScreen> {
                   icon: Icons.restart_alt,
                   color: Colors.orange,
                   onPressed: () async {
-                    await Mobileanalytics.reset();
+                    await Adopture.reset();
                     _log('reset: cleared queue + new session');
                   },
                 ),
                 _ActionButton(
-                  label: Mobileanalytics.isEnabled ? 'Disable' : 'Enable',
-                  icon: Mobileanalytics.isEnabled
+                  label: Adopture.isEnabled ? 'Disable' : 'Enable',
+                  icon: Adopture.isEnabled
                       ? Icons.pause_circle
                       : Icons.play_circle,
-                  color: Mobileanalytics.isEnabled
+                  color: Adopture.isEnabled
                       ? Colors.red
                       : Colors.green,
                   onPressed: () async {
-                    if (Mobileanalytics.isEnabled) {
-                      await Mobileanalytics.disable();
+                    if (Adopture.isEnabled) {
+                      await Adopture.disable();
                       _log('tracking: DISABLED (opt-out)');
                     } else {
-                      Mobileanalytics.enable();
+                      Adopture.enable();
                       _log('tracking: ENABLED');
                     }
                   },
@@ -251,7 +251,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    Mobileanalytics.screen('ProfileScreen');
+    Adopture.screen('ProfileScreen');
   }
 
   @override
@@ -279,7 +279,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             leading: const Icon(Icons.edit),
             title: const Text('Edit Profile'),
             onTap: () {
-              Mobileanalytics.track('profile_edit_tapped');
+              Adopture.track('profile_edit_tapped');
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Tracked: profile_edit_tapped')),
               );
@@ -289,7 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             leading: const Icon(Icons.photo),
             title: const Text('Change Avatar'),
             onTap: () {
-              Mobileanalytics.track('avatar_change_tapped');
+              Adopture.track('avatar_change_tapped');
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Tracked: avatar_change_tapped')),
               );
@@ -299,8 +299,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
             onTap: () {
-              Mobileanalytics.track('logout_tapped');
-              Mobileanalytics.reset();
+              Adopture.track('logout_tapped');
+              Adopture.reset();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Tracked: logout + reset')),
               );
@@ -330,7 +330,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    Mobileanalytics.screen('SettingsScreen');
+    Adopture.screen('SettingsScreen');
   }
 
   @override
@@ -345,7 +345,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: _notifications,
             onChanged: (v) {
               setState(() => _notifications = v);
-              Mobileanalytics.track('setting_changed', {
+              Adopture.track('setting_changed', {
                 'setting': 'notifications',
                 'value': v.toString(),
               });
@@ -357,7 +357,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: _darkMode,
             onChanged: (v) {
               setState(() => _darkMode = v);
-              Mobileanalytics.track('setting_changed', {
+              Adopture.track('setting_changed', {
                 'setting': 'dark_mode',
                 'value': v.toString(),
               });
@@ -367,10 +367,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ListTile(
             leading: const Icon(Icons.privacy_tip),
             title: const Text('Opt-out of Analytics'),
-            subtitle: const Text('Calls Mobileanalytics.disable()'),
+            subtitle: const Text('Calls Adopture.disable()'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () async {
-              await Mobileanalytics.disable();
+              await Adopture.disable();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -383,10 +383,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ListTile(
             leading: const Icon(Icons.analytics),
             title: const Text('Opt back in'),
-            subtitle: const Text('Calls Mobileanalytics.enable()'),
+            subtitle: const Text('Calls Adopture.enable()'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              Mobileanalytics.enable();
+              Adopture.enable();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Analytics re-enabled.')),
               );
@@ -423,7 +423,7 @@ class _ShopScreenState extends State<ShopScreen> {
   @override
   void initState() {
     super.initState();
-    Mobileanalytics.screen('ShopScreen');
+    Adopture.screen('ShopScreen');
   }
 
   @override
@@ -447,7 +447,7 @@ class _ShopScreenState extends State<ShopScreen> {
                     icon: const Icon(Icons.visibility),
                     tooltip: 'View product',
                     onPressed: () {
-                      Mobileanalytics.track('product_viewed', {
+                      Adopture.track('product_viewed', {
                         'product': name,
                         'price': price,
                         'category': category,
@@ -461,7 +461,7 @@ class _ShopScreenState extends State<ShopScreen> {
                     icon: const Icon(Icons.add_shopping_cart),
                     tooltip: 'Add to cart',
                     onPressed: () {
-                      Mobileanalytics.track('add_to_cart', {
+                      Adopture.track('add_to_cart', {
                         'product': name,
                         'price': price,
                         'category': category,
@@ -479,7 +479,7 @@ class _ShopScreenState extends State<ShopScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Mobileanalytics.track('checkout_started', {
+          Adopture.track('checkout_started', {
             'item_count': '3',
             'total': '249.48',
           });
@@ -513,7 +513,7 @@ class _StressTestScreenState extends State<StressTestScreen> {
   @override
   void initState() {
     super.initState();
-    Mobileanalytics.screen('StressTestScreen');
+    Adopture.screen('StressTestScreen');
   }
 
   @override
@@ -558,9 +558,9 @@ class _StressTestScreenState extends State<StressTestScreen> {
             icon: Icons.send,
             onRun: () async {
               setState(() => _isSending = true);
-              await Mobileanalytics.flush();
+              await Adopture.flush();
               setState(() => _isSending = false);
-              _showResult('Flushed. Queue: ${Mobileanalytics.queueLength}');
+              _showResult('Flushed. Queue: ${Adopture.queueLength}');
             },
           ),
 
@@ -580,14 +580,14 @@ class _StressTestScreenState extends State<StressTestScreen> {
             description: 'Clears queue, user ID, starts new session. Verify session ID changes.',
             icon: Icons.restart_alt,
             onRun: () async {
-              final oldSession = Mobileanalytics.sessionId;
-              await Mobileanalytics.reset();
-              final newSession = Mobileanalytics.sessionId;
+              final oldSession = Adopture.sessionId;
+              await Adopture.reset();
+              final newSession = Adopture.sessionId;
               _showResult(
                 'Session rotated\n'
                 'Old: ${oldSession?.substring(0, 8)}...\n'
                 'New: ${newSession?.substring(0, 8)}...\n'
-                'Queue: ${Mobileanalytics.queueLength}',
+                'Queue: ${Adopture.queueLength}',
               );
             },
           ),
@@ -602,10 +602,10 @@ class _StressTestScreenState extends State<StressTestScreen> {
               for (var i = 0; i < 10; i++) {
                 props['key_$i'] = 'v' * 100; // 100 chars each
               }
-              Mobileanalytics.track('large_props_event', props);
+              Adopture.track('large_props_event', props);
               _showResult(
                 'Tracked large_props_event with ${props.length} properties.\n'
-                'Queue: ${Mobileanalytics.queueLength}',
+                'Queue: ${Adopture.queueLength}',
               );
             },
           ),
@@ -623,10 +623,10 @@ class _StressTestScreenState extends State<StressTestScreen> {
                 'About', 'Terms', 'Privacy', 'Account', 'Billing',
               ];
               for (final s in screens) {
-                Mobileanalytics.screen(s);
+                Adopture.screen(s);
               }
               _showResult(
-                'Fired 20 screen views.\nQueue: ${Mobileanalytics.queueLength}',
+                'Fired 20 screen views.\nQueue: ${Adopture.queueLength}',
               );
             },
           ),
@@ -645,32 +645,32 @@ class _StressTestScreenState extends State<StressTestScreen> {
 
   Future<void> _burst(int count) async {
     for (var i = 0; i < count; i++) {
-      Mobileanalytics.track('stress_event', {
+      Adopture.track('stress_event', {
         'index': '$i',
         'total': '$count',
         'batch': '${DateTime.now().millisecondsSinceEpoch}',
       });
     }
     setState(() {});
-    _showResult('Sent $count events. Queue: ${Mobileanalytics.queueLength}');
+    _showResult('Sent $count events. Queue: ${Adopture.queueLength}');
     widget.onLog?.call('burst: $count events');
   }
 
   Future<void> _testOptOutCycle() async {
     // 1. Disable
-    await Mobileanalytics.disable();
-    final queueAfterDisable = Mobileanalytics.queueLength;
+    await Adopture.disable();
+    final queueAfterDisable = Adopture.queueLength;
 
     // 2. Try to track (should be silently dropped)
-    Mobileanalytics.track('should_be_dropped', {'phase': 'disabled'});
-    final queueAfterDropped = Mobileanalytics.queueLength;
+    Adopture.track('should_be_dropped', {'phase': 'disabled'});
+    final queueAfterDropped = Adopture.queueLength;
 
     // 3. Re-enable
-    Mobileanalytics.enable();
+    Adopture.enable();
 
     // 4. Track for real
-    Mobileanalytics.track('after_reenable', {'phase': 'enabled'});
-    final queueAfterEnable = Mobileanalytics.queueLength;
+    Adopture.track('after_reenable', {'phase': 'enabled'});
+    final queueAfterEnable = Adopture.queueLength;
 
     _showResult(
       'Opt-out cycle complete:\n'
@@ -705,7 +705,7 @@ class _StressTestScreenState extends State<StressTestScreen> {
 class _SdkStateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final ctx = Mobileanalytics.deviceContext;
+    final ctx = Adopture.deviceContext;
     return Card(
       margin: const EdgeInsets.all(12),
       child: Padding(
@@ -716,15 +716,15 @@ class _SdkStateCard extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  Mobileanalytics.isEnabled
+                  Adopture.isEnabled
                       ? Icons.circle
                       : Icons.circle_outlined,
                   size: 12,
-                  color: Mobileanalytics.isEnabled ? Colors.green : Colors.red,
+                  color: Adopture.isEnabled ? Colors.green : Colors.red,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  Mobileanalytics.isEnabled ? 'TRACKING ON' : 'TRACKING OFF',
+                  Adopture.isEnabled ? 'TRACKING ON' : 'TRACKING OFF',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
@@ -732,7 +732,7 @@ class _SdkStateCard extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  'Queue: ${Mobileanalytics.queueLength}',
+                  'Queue: ${Adopture.queueLength}',
                   style: const TextStyle(
                     fontFamily: 'monospace',
                     fontWeight: FontWeight.bold,
@@ -741,8 +741,8 @@ class _SdkStateCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            _InfoRow('Session', _truncate(Mobileanalytics.sessionId, 20)),
-            _InfoRow('Endpoint', Mobileanalytics.endpoint ?? '-'),
+            _InfoRow('Session', _truncate(Adopture.sessionId, 20)),
+            _InfoRow('Endpoint', Adopture.endpoint ?? '-'),
             if (ctx != null) ...[
               _InfoRow('Device', '${ctx.os} ${ctx.osVersion} · ${ctx.deviceType}'),
               _InfoRow('App', 'v${ctx.appVersion} · ${ctx.locale}'),
@@ -882,11 +882,11 @@ class _SdkInfoTile extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          _InfoRow('Initialized', '${Mobileanalytics.isInitialized}'),
-          _InfoRow('Enabled', '${Mobileanalytics.isEnabled}'),
-          _InfoRow('Queue', '${Mobileanalytics.queueLength}'),
-          _InfoRow('Session', _truncate(Mobileanalytics.sessionId, 20)),
-          _InfoRow('Endpoint', Mobileanalytics.endpoint ?? '-'),
+          _InfoRow('Initialized', '${Adopture.isInitialized}'),
+          _InfoRow('Enabled', '${Adopture.isEnabled}'),
+          _InfoRow('Queue', '${Adopture.queueLength}'),
+          _InfoRow('Session', _truncate(Adopture.sessionId, 20)),
+          _InfoRow('Endpoint', Adopture.endpoint ?? '-'),
         ],
       ),
     );

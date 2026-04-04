@@ -20,7 +20,7 @@ class EventQueue {
     if (_initialized) return;
 
     final dir = await getApplicationDocumentsDirectory();
-    final dbPath = '${dir.path}/mobileanalytics_events.db';
+    final dbPath = '${dir.path}/adopture_events.db';
 
     _db = await openDatabase(
       dbPath,

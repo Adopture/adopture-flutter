@@ -1,31 +1,31 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:mobileanalytics/mobileanalytics.dart';
+import 'package:adopture/adopture.dart';
 
 void main() {
-  group('AnalyticsConfig', () {
+  group('AdoptureConfig', () {
     test('validates correct appKey format', () {
-      const config = AnalyticsConfig(appKey: 'ak_abcdefghijklmnopqrstuvwx');
+      const config = AdoptureConfig(appKey: 'ak_abcdefghijklmnopqrstuvwx');
       expect(() => config.validate(), returnsNormally);
     });
 
     test('rejects invalid appKey format', () {
-      const config = AnalyticsConfig(appKey: 'invalid_key');
+      const config = AdoptureConfig(appKey: 'invalid_key');
       expect(() => config.validate(), throwsArgumentError);
     });
 
     test('rejects appKey without ak_ prefix', () {
-      const config = AnalyticsConfig(appKey: 'xx_abcdefghijklmnopqrstuvwx');
+      const config = AdoptureConfig(appKey: 'xx_abcdefghijklmnopqrstuvwx');
       expect(() => config.validate(), throwsArgumentError);
     });
 
     test('rejects appKey with wrong length', () {
-      const config = AnalyticsConfig(appKey: 'ak_tooshort');
+      const config = AdoptureConfig(appKey: 'ak_tooshort');
       expect(() => config.validate(), throwsArgumentError);
     });
 
     test('rejects empty endpoint', () {
-      const config = AnalyticsConfig(
+      const config = AdoptureConfig(
         appKey: 'ak_abcdefghijklmnopqrstuvwx',
         endpoint: '',
       );
@@ -33,7 +33,7 @@ void main() {
     });
 
     test('rejects flushAt out of range', () {
-      const config = AnalyticsConfig(
+      const config = AdoptureConfig(
         appKey: 'ak_abcdefghijklmnopqrstuvwx',
         flushAt: 0,
       );
@@ -41,7 +41,7 @@ void main() {
     });
 
     test('rejects flushAt over 100', () {
-      const config = AnalyticsConfig(
+      const config = AdoptureConfig(
         appKey: 'ak_abcdefghijklmnopqrstuvwx',
         flushAt: 101,
       );
@@ -49,7 +49,7 @@ void main() {
     });
 
     test('uses correct defaults', () {
-      const config = AnalyticsConfig(appKey: 'ak_abcdefghijklmnopqrstuvwx');
+      const config = AdoptureConfig(appKey: 'ak_abcdefghijklmnopqrstuvwx');
       expect(config.debug, false);
       expect(config.autoCapture, true);
       expect(config.flushInterval, const Duration(seconds: 30));

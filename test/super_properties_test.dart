@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:mobileanalytics/src/super_properties.dart';
+import 'package:adopture/src/super_properties.dart';
 
 void main() {
   group('SuperProperties', () {

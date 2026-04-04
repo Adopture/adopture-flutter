@@ -1,4 +1,4 @@
-# mobileanalytics
+# Adopture Flutter SDK
 
 Privacy-first mobile analytics SDK for Flutter. Simple event tracking with offline support, automatic session management, and privacy-preserving user identification.
 
@@ -8,7 +8,8 @@ Privacy-first mobile analytics SDK for Flutter. Simple event tracking with offli
 - **Offline-first** — events queued on disk, sent when online
 - **Privacy by design** — only hashed IDs, raw device ID never leaves the device
 - **Automatic sessions** — lifecycle events and session rotation
-- **Batched sending** — GZip compressed, with retry and backoff
+- **Batched sending** — with retry and backoff
+- **GoRouter support** — automatic screen tracking including StatefulShellRoute branches
 - **Lightweight** — minimal dependencies, no native code
 
 ## Getting Started
@@ -17,43 +18,57 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  mobileanalytics: ^0.1.0
+  adopture: ^0.1.0
 ```
 
 ## Usage
 
 ```dart
-import 'package:mobileanalytics/mobileanalytics.dart';
+import 'package:adopture/adopture.dart';
 
 // Initialize once in main()
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Mobileanalytics.init(appKey: 'ak_your_app_key_here_000000');
+  await Adopture.init(appKey: 'ak_your_app_key_here_000000');
 
   runApp(MyApp());
 }
 
 // Track events anywhere
-Mobileanalytics.track('button_clicked', {'screen': 'home'});
+Adopture.track('button_clicked', {'screen': 'home'});
 
 // Track screen views
-Mobileanalytics.screen('HomeScreen');
+Adopture.screen('HomeScreen');
 
 // Identify users (optional)
-Mobileanalytics.identify('user_123');
+Adopture.identify('user_123');
+```
+
+## GoRouter Integration
+
+For apps using `go_router` with `StatefulShellRoute`, the standard `NavigatorObserver` misses branch switches. The SDK provides a dedicated observer:
+
+```dart
+final router = GoRouter(
+  observers: [Adopture.navigationObserver()],
+  routes: [...],
+);
+
+// Observe all route changes including shell branch switches
+Adopture.observeGoRouter(router);
 ```
 
 ## Configuration
 
 ```dart
-await Mobileanalytics.init(
+await Adopture.init(
   appKey: 'ak_your_app_key_here_000000',
-  endpoint: 'https://api.yourapp.com',   // Custom endpoint
-  debug: false,                           // Log events to console
-  autoCapture: true,                      // Lifecycle events + sessions
-  flushInterval: Duration(seconds: 30),   // Batch send interval
-  flushAt: 20,                            // Send when N events queued
-  maxQueueSize: 1000,                     // Max events stored on disk
+  endpoint: 'https://api.adopture.com',    // Custom endpoint
+  debug: false,                             // Log events to console
+  autoCapture: true,                        // Lifecycle events + sessions
+  flushInterval: Duration(seconds: 30),     // Batch send interval
+  flushAt: 20,                              // Send when N events queued
+  maxQueueSize: 1000,                       // Max events stored on disk
 );
 ```
 

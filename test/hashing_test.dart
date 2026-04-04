@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:mobileanalytics/src/hashing.dart';
+import 'package:adopture/src/hashing.dart';
 
 void main() {
   group('Hashing', () {

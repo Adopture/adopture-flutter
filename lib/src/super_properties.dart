@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Super properties are automatically merged into every tracked event.
 /// Event-level properties override super properties with the same key.
 class SuperProperties {
-  static const _storageKey = 'mobileanalytics_super_props';
+  static const _storageKey = 'adopture_super_props';
 
   Map<String, String> _props = {};
 

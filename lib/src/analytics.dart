@@ -10,8 +10,10 @@ import 'config.dart';
 import 'context_collector.dart';
 import 'event.dart';
 import 'event_queue.dart';
+import 'go_router_observer.dart';
 import 'hashing.dart';
 import 'lifecycle_observer.dart';
+import 'navigation_observer.dart';
 import 'session_manager.dart';
 import 'super_properties.dart';
 
@@ -19,10 +21,10 @@ import 'super_properties.dart';
 ///
 /// Singleton — call [init] once at app startup, then use
 /// [track], [screen], and [identify] anywhere.
-class Mobileanalytics {
-  static Mobileanalytics? _instance;
+class Adopture {
+  static Adopture? _instance;
 
-  final AnalyticsConfig _config;
+  final AdoptureConfig _config;
   final EventQueue _queue;
   final BatchSender _sender;
   final SessionManager _session;
@@ -35,8 +37,8 @@ class Mobileanalytics {
   String? _userId;
   bool _enabled = true;
 
-  Mobileanalytics._({
-    required AnalyticsConfig config,
+  Adopture._({
+    required AdoptureConfig config,
     required EventQueue queue,
     required BatchSender sender,
     required SessionManager session,
@@ -50,18 +52,18 @@ class Mobileanalytics {
   /// Initializes the SDK. Must be called once before any tracking.
   ///
   /// ```dart
-  /// await Mobileanalytics.init(appKey: 'ak_your_app_key');
+  /// await Adopture.init(appKey: 'ak_your_app_key');
   /// ```
   static Future<void> init({
     required String appKey,
-    String endpoint = 'https://api.mobileanalytics.app',
+    String endpoint = 'https://api.adopture.com',
     bool debug = false,
     bool autoCapture = true,
     Duration flushInterval = const Duration(seconds: 30),
     int flushAt = 20,
     int maxQueueSize = 1000,
   }) async {
-    final config = AnalyticsConfig(
+    final config = AdoptureConfig(
       appKey: appKey,
       endpoint: endpoint,
       debug: debug,
@@ -80,7 +82,7 @@ class Mobileanalytics {
     final superProps = SuperProperties();
     await superProps.load();
 
-    final instance = Mobileanalytics._(
+    final instance = Adopture._(
       config: config,
       queue: queue,
       sender: sender,
@@ -109,14 +111,14 @@ class Mobileanalytics {
     sender.start();
 
     if (debug) {
-      debugPrint('[Mobileanalytics] Initialized with appKey: ${appKey.substring(0, 6)}...');
+      debugPrint('[Adopture] Initialized with appKey: ${appKey.substring(0, 6)}...');
     }
   }
 
   /// Tracks a custom event.
   ///
   /// ```dart
-  /// Mobileanalytics.track('button_clicked', {'screen': 'home'});
+  /// Adopture.track('button_clicked', {'screen': 'home'});
   /// ```
   static void track(String name, [Map<String, String>? properties]) {
     _assertInitialized();
@@ -127,7 +129,7 @@ class Mobileanalytics {
   /// Tracks a screen view.
   ///
   /// ```dart
-  /// Mobileanalytics.screen('HomeScreen');
+  /// Adopture.screen('HomeScreen');
   /// ```
   static void screen(String name, [Map<String, String>? properties]) {
     _assertInitialized();
@@ -223,12 +225,57 @@ class Mobileanalytics {
   /// Shuts down the SDK, flushing remaining events.
   static Future<void> shutdown() async {
     if (_instance == null) return;
+    GoRouterObserver.dispose();
     _instance!._lifecycleObserver?.unregister();
     _instance!._sender.stop();
     await _instance!._sender.flush();
     await _instance!._queue.close();
     _instance!._sender.dispose();
     _instance = null;
+  }
+
+  // --- Navigation tracking ---
+
+  /// Observes a `GoRouter` instance for automatic screen tracking.
+  ///
+  /// Tracks **all** route changes including `StatefulShellRoute` branch
+  /// switches that a standard [NavigatorObserver] cannot see.
+  ///
+  /// Call this once after creating your `GoRouter`:
+  ///
+  /// ```dart
+  /// final router = GoRouter(routes: [...]);
+  /// Adopture.observeGoRouter(router);
+  /// ```
+  ///
+  /// The [goRouter] parameter is `dynamic` so the SDK does not depend on
+  /// the `go_router` package. Any object with a `routeInformationProvider`
+  /// getter works.
+  static void observeGoRouter(dynamic goRouter) {
+    GoRouterObserver.observe(goRouter);
+  }
+
+  /// Returns a [NavigatorObserver] for standard (non-GoRouter) navigation.
+  ///
+  /// Use this for `MaterialApp.navigatorObservers` or as a fallback in
+  /// `GoRouter.observers` to catch modals/dialogs that bypass the router.
+  ///
+  /// If [observeGoRouter] is also active, GoRouter routes are automatically
+  /// deduplicated. Pass [goRouterRouteNames] to list named routes that
+  /// should be skipped by this observer.
+  ///
+  /// ```dart
+  /// GoRouter(
+  ///   observers: [Adopture.navigationObserver()],
+  ///   routes: [...],
+  /// );
+  /// ```
+  static NavigatorObserver navigationObserver({
+    Set<String>? goRouterRouteNames,
+  }) {
+    return AdoptureNavigationObserver(
+      goRouterRouteNames: goRouterRouteNames,
+    );
   }
 
   // --- Private ---
@@ -268,17 +315,17 @@ class Mobileanalytics {
     );
 
     unawaited(_queue.add(event).catchError((Object e) {
-      debugPrint('[Mobileanalytics] Failed to persist event to disk: $e');
+      debugPrint('[Adopture] Failed to persist event to disk: $e');
     }));
 
     if (_config.debug) {
-      debugPrint('[Mobileanalytics] ${type.name}: $name');
+      debugPrint('[Adopture] ${type.name}: $name');
       unawaited(_sender.flush().catchError((Object e) {
-        debugPrint('[Mobileanalytics] Debug flush failed: $e');
+        debugPrint('[Adopture] Debug flush failed: $e');
       }));
     } else if (_queue.length >= _config.flushAt) {
       unawaited(_sender.flush().catchError((Object e) {
-        debugPrint('[Mobileanalytics] Flush failed: $e');
+        debugPrint('[Adopture] Flush failed: $e');
       }));
     }
   }
@@ -295,7 +342,7 @@ class Mobileanalytics {
       onAppBackgrounded: () {
         _enqueueRaw(EventType.track, 'app_backgrounded', {});
         unawaited(_sender.flush().catchError((Object e) {
-          debugPrint('[Mobileanalytics] Background flush failed: $e');
+          debugPrint('[Adopture] Background flush failed: $e');
         }));
       },
     );
@@ -304,7 +351,7 @@ class Mobileanalytics {
 
   Future<void> _trackInstallOrUpdate() async {
     final prefs = await SharedPreferences.getInstance();
-    final storedVersion = prefs.getString('mobileanalytics_app_version');
+    final storedVersion = prefs.getString('adopture_app_version');
     final currentVersion = _cachedContext!.appVersion;
 
     if (storedVersion == null) {
@@ -318,7 +365,7 @@ class Mobileanalytics {
       });
     }
 
-    await prefs.setString('mobileanalytics_app_version', currentVersion);
+    await prefs.setString('adopture_app_version', currentVersion);
   }
 
   static Future<String> _resolveDeviceId() async {
@@ -332,17 +379,17 @@ class Mobileanalytics {
     }
     // Desktop/other: persist a generated ID so it survives app restarts
     final prefs = await SharedPreferences.getInstance();
-    final stored = prefs.getString('mobileanalytics_device_id');
+    final stored = prefs.getString('adopture_device_id');
     if (stored != null) return stored;
     final generated = 'desktop-${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}';
-    await prefs.setString('mobileanalytics_device_id', generated);
+    await prefs.setString('adopture_device_id', generated);
     return generated;
   }
 
   static void _assertInitialized() {
     assert(
       _instance != null,
-      'Mobileanalytics.init() must be called before using the SDK.',
+      'Adopture.init() must be called before using the SDK.',
     );
   }
 }

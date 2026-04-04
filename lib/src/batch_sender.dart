@@ -28,7 +28,7 @@ class BatchSender {
   static const _uuid = Uuid();
   static final _random = Random();
 
-  final AnalyticsConfig config;
+  final AdoptureConfig config;
   final EventQueue queue;
   final http.Client _httpClient;
   final Connectivity _connectivity;
@@ -48,7 +48,7 @@ class BatchSender {
 
   void _log(String message) {
     if (config.debug) {
-      debugPrint('[Mobileanalytics] $message');
+      debugPrint('[Adopture] $message');
     }
   }
 

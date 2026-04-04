@@ -7,10 +7,10 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart' as http_testing;
 import 'package:mocktail/mocktail.dart';
 
-import 'package:mobileanalytics/src/batch_sender.dart';
-import 'package:mobileanalytics/src/config.dart';
-import 'package:mobileanalytics/src/event.dart';
-import 'package:mobileanalytics/src/event_queue.dart';
+import 'package:adopture/src/batch_sender.dart';
+import 'package:adopture/src/config.dart';
+import 'package:adopture/src/event.dart';
+import 'package:adopture/src/event_queue.dart';
 
 // --- Mocks ---
 
@@ -49,7 +49,7 @@ class FakeEventQueue extends Fake implements EventQueue {
 
 // --- Helpers ---
 
-AnalyticsConfig _config({bool debug = false}) => AnalyticsConfig(
+AdoptureConfig _config({bool debug = false}) => AdoptureConfig(
       appKey: 'ak_ABCDEFGHIJKLMNOPqrstuv01',
       endpoint: 'https://api.test.com',
       debug: debug,

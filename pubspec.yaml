@@ -5,6 +5,18 @@ homepage: https://adopture.com
 repository: https://github.com/christopherarm/mobileanalytics
 issue_tracker: https://github.com/christopherarm/mobileanalytics/issues
 
+topics:
+  - analytics
+  - privacy
+  - mobile
+  - tracking
+  - session
+
+platforms:
+  android:
+  ios:
+  macos:
+
 environment:
   sdk: ^3.4.0
   flutter: ">=3.22.0"

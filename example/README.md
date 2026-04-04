@@ -1,16 +1,21 @@
-# example_app
+# Adopture SDK Example App
 
-A new Flutter project.
+A demo Flutter app showcasing the Adopture analytics SDK.
 
-## Getting Started
+## Screens
 
-This project is a starting point for a Flutter application.
+- **Home** — SDK state dashboard (session ID, queue length, tracking status) with action buttons for track, flush, reset, and disable/enable
+- **Profile** — User identification and logout flow
+- **Settings** — Opt-out/opt-in toggles and SDK debug info
+- **Shop** — E-commerce event tracking (product views, add to cart, checkout)
+- **Revenue** — Revenue tracking methods: purchase, renewal, trial, cancellation, refund
+- **Stress Test** — Burst events (10/50/200), offline simulation, opt-out cycle, large properties
 
-A few resources to get you started if this is your first Flutter project:
+## Running
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```bash
+cd example
+flutter run
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The app uses a test app key and sends events to `api.adopture.com`. Replace the app key in `lib/main.dart` with your own key from the Adopture dashboard.

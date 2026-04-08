@@ -1,3 +1,11 @@
+## 0.1.1
+
+- Update all dependencies to latest versions
+- `connectivity_plus` ^6.1.0 → ^7.1.0
+- `device_info_plus` ^12.4.0, `package_info_plus` ^9.0.1
+- `flutter_lints` ^5.0.0 → ^6.0.0
+- Minor version bumps for all other packages
+
 ## 0.1.0
 
 Initial release of the Adopture Flutter SDK.

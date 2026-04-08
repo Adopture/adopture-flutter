@@ -4,8 +4,8 @@ description: >-
   automatic sessions, revenue analytics, and privacy-preserving hashed IDs.
 version: 0.1.0
 homepage: https://adopture.com
-repository: https://github.com/christopherarm/mobileanalytics
-issue_tracker: https://github.com/christopherarm/mobileanalytics/issues
+repository: https://github.com/Adopture/adopture-flutter
+issue_tracker: https://github.com/Adopture/adopture-flutter/issues
 documentation: https://adopture.com/docs
 
 topics:

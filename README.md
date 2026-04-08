@@ -281,7 +281,7 @@ The SDK never sends raw device identifiers. Instead, it generates rotating SHA25
 
 - [Adopture Dashboard](https://app.adopture.com) -- view your analytics
 - [Documentation](https://adopture.com/docs) -- full API reference
-- [GitHub](https://github.com/christopherarm/mobileanalytics) -- source code and issues
+- [GitHub](https://github.com/Adopture/adopture-flutter) -- source code and issues
 
 ## License
 

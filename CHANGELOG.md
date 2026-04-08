@@ -1,5 +1,6 @@
 ## 0.1.1
 
+- Fix broken logo image in README — use text header instead
 - Update all dependencies to latest versions
 - `connectivity_plus` ^6.1.0 → ^7.1.0
 - `device_info_plus` ^12.4.0, `package_info_plus` ^9.0.1

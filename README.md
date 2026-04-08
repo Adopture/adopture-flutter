@@ -1,9 +1,4 @@
-<p align="center">
-  <a href="https://adopture.com">
-    <img src="https://adopture.com/logo.svg" alt="Adopture" width="120" />
-  </a>
-</p>
-
+<h1 align="center"><a href="https://adopture.com">Adopture</a></h1>
 <h3 align="center">Privacy-first mobile analytics for Flutter</h3>
 
 <p align="center">

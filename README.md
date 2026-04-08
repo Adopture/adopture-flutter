@@ -1,26 +1,47 @@
-# Adopture Flutter SDK
+<p align="center">
+  <a href="https://adopture.com">
+    <img src="https://adopture.com/logo.svg" alt="Adopture" width="120" />
+  </a>
+</p>
 
-Privacy-first mobile analytics SDK for Flutter. Simple event tracking with offline support, automatic session management, and privacy-preserving user identification.
+<h3 align="center">Privacy-first mobile analytics for Flutter</h3>
+
+<p align="center">
+  <a href="https://pub.dev/packages/adopture"><img src="https://img.shields.io/pub/v/adopture.svg" alt="pub version"></a>
+  <a href="https://pub.dev/packages/adopture/score"><img src="https://img.shields.io/pub/points/adopture" alt="pub points"></a>
+  <a href="https://pub.dev/packages/adopture"><img src="https://img.shields.io/pub/popularity/adopture" alt="popularity"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+</p>
+
+<p align="center">
+  Simple event tracking with offline support, automatic session management, and privacy-preserving user identification. No raw device IDs ever leave the device.
+</p>
+
+---
 
 ## Features
 
-- **3-line setup** — init, track, done
-- **Offline-first** — events queued on disk (SQLite), sent when online
-- **Privacy by design** — only hashed IDs leave the device, no raw identifiers
-- **Revenue tracking** — purchases, subscriptions, trials, refunds
-- **Automatic sessions** — lifecycle events and 30-min timeout rotation
-- **Batched sending** — with exponential backoff and retry
-- **GoRouter support** — automatic screen tracking including StatefulShellRoute branches
-- **Super properties** — persistent properties attached to every event
-- **Lightweight** — no native code, pure Dart
+- **3-line setup** -- init, track, done
+- **Offline-first** -- events queued on disk (SQLite), sent when online
+- **Privacy by design** -- only hashed IDs leave the device, no raw identifiers
+- **Revenue tracking** -- purchases, subscriptions, trials, refunds
+- **Automatic sessions** -- lifecycle events and 30-min timeout rotation
+- **Batched sending** -- with exponential backoff and retry
+- **GoRouter support** -- automatic screen tracking including StatefulShellRoute branches
+- **Super properties** -- persistent properties attached to every event
+- **Lightweight** -- no native code, pure Dart
 
-## Getting Started
-
-Add to your `pubspec.yaml`:
+## Installation
 
 ```yaml
 dependencies:
   adopture: ^0.1.0
+```
+
+Then run:
+
+```sh
+flutter pub get
 ```
 
 ## Quick Start
@@ -33,14 +54,18 @@ void main() async {
   await Adopture.init(appKey: 'ak_your_app_key_here_000000');
   runApp(MyApp());
 }
+```
 
-// Track events anywhere
+Track events anywhere in your app:
+
+```dart
+// Custom events
 Adopture.track('button_clicked', {'screen': 'home'});
 
-// Track screen views
+// Screen views
 Adopture.screen('HomeScreen');
 
-// Identify users (optional)
+// User identification (optional)
 await Adopture.identify('user_123');
 ```
 
@@ -161,7 +186,7 @@ Adopture.trackRevenue(RevenueData(
 
 The store is auto-detected from the platform (iOS/macOS -> App Store, Android -> Play Store) if not specified.
 
-> **Tip:** If you use RevenueCat, revenue tracking is handled automatically via the webhook integration — no SDK calls needed.
+> **Tip:** If you use RevenueCat, revenue tracking is handled automatically via the webhook integration -- no SDK calls needed.
 
 ## GoRouter Integration
 
@@ -234,11 +259,30 @@ When `autoCapture: true` (default), the SDK automatically tracks:
 
 The SDK never sends raw device identifiers. Instead, it generates rotating SHA256 hashes:
 
-- **Daily hash** — rotates daily, used for DAU counting
-- **Monthly hash** — rotates monthly, used for MAU and retention
-- **Retention hash** — rotates quarterly, used for cross-month cohort analysis
+| Hash | Rotation | Use |
+|------|----------|-----|
+| Daily | Every day | DAU counting |
+| Monthly | Every month | MAU and retention |
+| Retention | Every quarter | Cross-month cohort analysis |
+
 - No IP addresses stored server-side (used only for GeoIP lookup, then discarded)
+- User IDs are SHA256-hashed by default before leaving the device
+- All data transmitted over HTTPS
+
+## Platform Support
+
+| Platform | Supported |
+|----------|-----------|
+| Android  | Yes       |
+| iOS      | Yes       |
+| macOS    | Yes       |
+
+## Learn More
+
+- [Adopture Dashboard](https://app.adopture.com) -- view your analytics
+- [Documentation](https://adopture.com/docs) -- full API reference
+- [GitHub](https://github.com/christopherarm/mobileanalytics) -- source code and issues
 
 ## License
 
-MIT
+MIT -- see [LICENSE](LICENSE) for details.

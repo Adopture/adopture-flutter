@@ -14,9 +14,16 @@ import 'event_queue.dart';
 
 /// Result of a batch send attempt.
 enum SendResult {
+  /// Events were accepted by the server (HTTP 202).
   success,
+
+  /// Server returned 429 — too many requests.
   rateLimited,
+
+  /// Server returned 503 or an unexpected status code.
   serverError,
+
+  /// Could not reach the server (socket/HTTP exception).
   networkError,
 }
 
@@ -112,7 +119,8 @@ class BatchSender {
           await queue.removeFromDisk(events.length);
           _log('Batch sent successfully (${events.length} events)');
         } else {
-          _log('Batch failed: ${result.name} — re-queuing ${events.length} events');
+          _log(
+              'Batch failed: ${result.name} — re-queuing ${events.length} events');
           queue.requeue(events);
           break;
         }
@@ -140,7 +148,8 @@ class BatchSender {
             final maxMs = min((1 << attempt) * 1000, _maxBackoffMs);
             final jitteredMs = _random.nextInt(maxMs);
             final delay = Duration(milliseconds: jitteredMs);
-            _log('Retry ${attempt + 1}/$_maxRetries in ${delay.inMilliseconds}ms (${result.name})');
+            _log(
+                'Retry ${attempt + 1}/$_maxRetries in ${delay.inMilliseconds}ms (${result.name})');
             await Future<void>.delayed(delay);
           }
       }

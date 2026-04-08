@@ -19,8 +19,8 @@ class Hashing {
   String? _lastRetentionSalt;
 
   Hashing({required String deviceId, required String appKey})
-    : _deviceId = deviceId,
-      _appKey = appKey;
+      : _deviceId = deviceId,
+        _appKey = appKey;
 
   /// SHA256(device_id + app_key + YYYY-MM-DD) for DAU counting.
   String dailyHash() {

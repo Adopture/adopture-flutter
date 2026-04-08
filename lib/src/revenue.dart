@@ -47,9 +47,16 @@ enum RevenueEventType {
 
 /// Store where the purchase was made.
 enum Store {
+  /// Apple App Store.
   appStore,
+
+  /// Google Play Store.
   playStore,
+
+  /// Stripe payments.
   stripe,
+
+  /// Any other payment provider.
   other;
 
   String toBackendString() => switch (this) {

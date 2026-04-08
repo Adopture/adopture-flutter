@@ -88,7 +88,7 @@ void main() {
           .thenAnswer((_) => const Stream.empty());
     });
 
-    BatchSender _sender({
+    BatchSender createSender({
       http.Client? client,
       bool debug = false,
     }) =>
@@ -105,7 +105,7 @@ void main() {
       });
 
       queue.addEvents([_event(), _event()]);
-      final sender = _sender(client: client);
+      final sender = createSender(client: client);
 
       await sender.flush();
 
@@ -122,7 +122,7 @@ void main() {
       });
 
       queue.addEvents([_event('purchase')]);
-      final sender = _sender(client: client);
+      final sender = createSender(client: client);
 
       await sender.flush();
 
@@ -145,7 +145,7 @@ void main() {
       });
 
       queue.addEvents([_event()]);
-      final sender = _sender(client: client);
+      final sender = createSender(client: client);
       await sender.flush();
 
       expect(sentUri.toString(), 'https://api.adopture.com/api/v1/events');
@@ -161,7 +161,7 @@ void main() {
         return http.Response('', 202);
       });
 
-      final sender = _sender(client: client);
+      final sender = createSender(client: client);
       await sender.flush();
 
       expect(requestCount, 0);
@@ -174,7 +174,7 @@ void main() {
       });
 
       queue.addEvents([_event()]);
-      final sender = _sender(client: client);
+      final sender = createSender(client: client);
 
       await sender.flush();
 
@@ -190,7 +190,7 @@ void main() {
       });
 
       queue.addEvents([_event()]);
-      final sender = _sender(client: client);
+      final sender = createSender(client: client);
 
       await sender.flush();
 
@@ -210,7 +210,7 @@ void main() {
       });
 
       queue.addEvents([_event()]);
-      final sender = _sender(client: client);
+      final sender = createSender(client: client);
 
       await sender.flush();
 
@@ -229,7 +229,7 @@ void main() {
       });
 
       queue.addEvents([_event(), _event()]);
-      final sender = _sender(client: client);
+      final sender = createSender(client: client);
 
       // Start two flushes concurrently
       final flush1 = sender.flush();
@@ -255,7 +255,7 @@ void main() {
 
       // Add 150 events
       queue.addEvents(List.generate(150, (i) => _event('event_$i')));
-      final sender = _sender(client: client);
+      final sender = createSender(client: client);
 
       await sender.flush();
 
@@ -273,7 +273,7 @@ void main() {
         return http.Response('', 202);
       });
 
-      final sender = _sender(client: client);
+      final sender = createSender(client: client);
       sender.start();
 
       // Simulate going offline then back online
@@ -291,7 +291,7 @@ void main() {
     });
 
     test('stop cancels timer and connectivity subscription', () {
-      final sender = _sender();
+      final sender = createSender();
       sender.start();
       sender.stop();
       // No assertion needed — verifying no exceptions on stop

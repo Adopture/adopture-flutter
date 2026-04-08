@@ -115,7 +115,8 @@ class Adopture {
     sender.start();
 
     if (debug) {
-      debugPrint('[Adopture] Initialized with appKey: ${appKey.substring(0, 6)}...');
+      debugPrint(
+          '[Adopture] Initialized with appKey: ${appKey.substring(0, 6)}...');
     }
   }
 
@@ -361,13 +362,15 @@ class Adopture {
 
   /// Registers super properties that are sent with every event.
   /// Overwrites existing keys with the same name.
-  static Future<void> registerSuperProperties(Map<String, String> properties) async {
+  static Future<void> registerSuperProperties(
+      Map<String, String> properties) async {
     _assertInitialized();
     await _instance!._superProperties.register(properties);
   }
 
   /// Registers super properties only if the key is not already set.
-  static Future<void> registerSuperPropertiesOnce(Map<String, String> properties) async {
+  static Future<void> registerSuperPropertiesOnce(
+      Map<String, String> properties) async {
     _assertInitialized();
     await _instance!._superProperties.registerOnce(properties);
   }
@@ -493,7 +496,8 @@ class Adopture {
       hashedMonthlyId: _hashing.monthlyHash(),
       hashedRetentionId: _hashing.retentionHash(),
       sessionId: _session.sessionId,
-      timestamp: '${DateTime.now().toUtc().toIso8601String().split('.').first}Z',
+      timestamp:
+          '${DateTime.now().toUtc().toIso8601String().split('.').first}Z',
       properties: mergedProps,
       context: _cachedContext!,
       userId: _userId,
@@ -639,7 +643,8 @@ class Adopture {
     final prefs = await SharedPreferences.getInstance();
     final stored = prefs.getString('adopture_device_id');
     if (stored != null) return stored;
-    final generated = 'desktop-${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}';
+    final generated =
+        'desktop-${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}';
     await prefs.setString('adopture_device_id', generated);
     return generated;
   }

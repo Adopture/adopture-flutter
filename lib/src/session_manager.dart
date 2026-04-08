@@ -9,8 +9,8 @@ class SessionManager {
   DateTime _lastActivityAt;
 
   SessionManager()
-    : _sessionId = _uuid.v4(),
-      _lastActivityAt = DateTime.now();
+      : _sessionId = _uuid.v4(),
+        _lastActivityAt = DateTime.now();
 
   /// The current session ID.
   String get sessionId => _sessionId;

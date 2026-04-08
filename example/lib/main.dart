@@ -135,7 +135,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 _NavChip(
                   label: 'Stress Test',
                   icon: Icons.speed,
-                  onTap: () => _navigateTo(context, StressTestScreen(onLog: _log)),
+                  onTap: () =>
+                      _navigateTo(context, StressTestScreen(onLog: _log)),
                 ),
               ],
             ),
@@ -183,9 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   icon: Adopture.isEnabled
                       ? Icons.pause_circle
                       : Icons.play_circle,
-                  color: Adopture.isEnabled
-                      ? Colors.red
-                      : Colors.green,
+                  color: Adopture.isEnabled ? Colors.red : Colors.green,
                   onPressed: () async {
                     if (Adopture.isEnabled) {
                       await Adopture.disable();
@@ -456,7 +455,8 @@ class _ShopScreenState extends State<ShopScreen> {
                         'category': category,
                       });
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Tracked: product_viewed ($name)')),
+                        SnackBar(
+                            content: Text('Tracked: product_viewed ($name)')),
                       );
                     },
                   ),
@@ -706,7 +706,8 @@ class _StressTestScreenState extends State<StressTestScreen> {
           // Burst 200 events
           _TestCard(
             title: 'Burst: 200 Events',
-            description: 'Send 200 events to test multi-batch sending (max 100/request).',
+            description:
+                'Send 200 events to test multi-batch sending (max 100/request).',
             icon: Icons.rocket_launch,
             onRun: () => _burst(200),
           ),
@@ -737,7 +738,8 @@ class _StressTestScreenState extends State<StressTestScreen> {
           // Reset test
           _TestCard(
             title: 'Reset SDK State',
-            description: 'Clears queue, user ID, starts new session. Verify session ID changes.',
+            description:
+                'Clears queue, user ID, starts new session. Verify session ID changes.',
             icon: Icons.restart_alt,
             onRun: () async {
               final oldSession = Adopture.sessionId;
@@ -755,7 +757,8 @@ class _StressTestScreenState extends State<StressTestScreen> {
           // Properties size test
           _TestCard(
             title: 'Large Properties',
-            description: 'Track event with many properties (near 500-char limit per value).',
+            description:
+                'Track event with many properties (near 500-char limit per value).',
             icon: Icons.data_object,
             onRun: () {
               final props = <String, String>{};
@@ -777,10 +780,26 @@ class _StressTestScreenState extends State<StressTestScreen> {
             icon: Icons.swap_horiz,
             onRun: () {
               final screens = [
-                'Home', 'Profile', 'Settings', 'Shop', 'Cart',
-                'Checkout', 'OrderConfirm', 'Search', 'Filters', 'Detail',
-                'Reviews', 'Wishlist', 'Notifications', 'Messages', 'Help',
-                'About', 'Terms', 'Privacy', 'Account', 'Billing',
+                'Home',
+                'Profile',
+                'Settings',
+                'Shop',
+                'Cart',
+                'Checkout',
+                'OrderConfirm',
+                'Search',
+                'Filters',
+                'Detail',
+                'Reviews',
+                'Wishlist',
+                'Notifications',
+                'Messages',
+                'Help',
+                'About',
+                'Terms',
+                'Privacy',
+                'Account',
+                'Billing',
               ];
               for (final s in screens) {
                 Adopture.screen(s);
@@ -876,9 +895,7 @@ class _SdkStateCard extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  Adopture.isEnabled
-                      ? Icons.circle
-                      : Icons.circle_outlined,
+                  Adopture.isEnabled ? Icons.circle : Icons.circle_outlined,
                   size: 12,
                   color: Adopture.isEnabled ? Colors.green : Colors.red,
                 ),
@@ -904,7 +921,8 @@ class _SdkStateCard extends StatelessWidget {
             _InfoRow('Session', _truncate(Adopture.sessionId, 20)),
             _InfoRow('Endpoint', Adopture.endpoint),
             if (ctx != null) ...[
-              _InfoRow('Device', '${ctx.os} ${ctx.osVersion} · ${ctx.deviceType}'),
+              _InfoRow(
+                  'Device', '${ctx.os} ${ctx.osVersion} · ${ctx.deviceType}'),
               _InfoRow('App', 'v${ctx.appVersion} · ${ctx.locale}'),
               _InfoRow('Screen', '${ctx.screenWidth}x${ctx.screenHeight}'),
             ],
@@ -990,9 +1008,8 @@ class _ActionButton extends StatelessWidget {
       onPressed: onPressed,
       icon: Icon(icon, size: 16),
       label: Text(label, style: const TextStyle(fontSize: 12)),
-      style: color != null
-          ? FilledButton.styleFrom(backgroundColor: color)
-          : null,
+      style:
+          color != null ? FilledButton.styleFrom(backgroundColor: color) : null,
     );
   }
 }

@@ -1,0 +1,26 @@
+# Build artifacts
+build/
+.dart_tool/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Lock file (not recommended for packages)
+pubspec.lock
+
+# Flutter metadata
+.metadata
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+
+# Example platform stubs (not supported)
+example/linux/
+example/windows/
+example/web/

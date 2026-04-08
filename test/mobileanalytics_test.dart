@@ -171,10 +171,17 @@ void main() {
       );
 
       final json = context.toJson();
-      expect(json.keys, containsAll([
-        'os', 'os_version', 'app_version', 'locale',
-        'device_type', 'screen_width', 'screen_height',
-      ]));
+      expect(
+          json.keys,
+          containsAll([
+            'os',
+            'os_version',
+            'app_version',
+            'locale',
+            'device_type',
+            'screen_width',
+            'screen_height',
+          ]));
     });
   });
 }

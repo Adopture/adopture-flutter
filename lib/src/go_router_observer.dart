@@ -22,6 +22,10 @@ class GoRouterObserver {
   String? _lastTrackedPath;
   VoidCallback? _removeListener;
 
+  /// Whether a GoRouter observer is currently active.
+  /// Used by [AdoptureNavigationObserver] to skip duplicate screen events.
+  static bool get isActive => _instance != null;
+
   GoRouterObserver._();
 
   /// Attaches to a router instance. Accepts `dynamic` so we don't need

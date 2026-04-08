@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'analytics.dart';
+import 'go_router_observer.dart';
 
 /// [NavigatorObserver] that automatically tracks screen views.
 ///
@@ -16,12 +17,10 @@ import 'analytics.dart';
 /// );
 /// ```
 class AdoptureNavigationObserver extends NavigatorObserver {
-  /// Route names managed by GoRouter — skipped to avoid double-counting
-  /// when [Adopture.observeGoRouter] is also active.
-  final Set<String> _goRouterRouteNames;
-
-  AdoptureNavigationObserver({Set<String>? goRouterRouteNames})
-      : _goRouterRouteNames = goRouterRouteNames ?? const {};
+  AdoptureNavigationObserver({
+    @Deprecated('No longer needed — dedup is now automatic when GoRouterObserver is active')
+    Set<String>? goRouterRouteNames,
+  });
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
@@ -47,14 +46,11 @@ class AdoptureNavigationObserver extends NavigatorObserver {
     final name = route.settings.name;
     if (name == null || name.isEmpty) return;
 
-    // Skip GoRouter routes when the GoRouter observer is active
-    if (_isGoRouterRoute(name)) return;
+    // When GoRouterObserver is active it already tracks every route change
+    // via routeInformationProvider. Skip ALL navigator events to avoid
+    // double-counting (e.g. "onboarding-v3/auth" + "onboarding-v3-auth").
+    if (GoRouterObserver.isActive) return;
 
     Adopture.screen(name, {'source': 'navigator_observer'});
-  }
-
-  bool _isGoRouterRoute(String name) {
-    if (name.startsWith('/')) return true;
-    return _goRouterRouteNames.contains(name);
   }
 }

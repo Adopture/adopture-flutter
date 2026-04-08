@@ -447,9 +447,8 @@ class Adopture {
   /// Use this for `MaterialApp.navigatorObservers` or as a fallback in
   /// `GoRouter.observers` to catch modals/dialogs that bypass the router.
   ///
-  /// If [observeGoRouter] is also active, GoRouter routes are automatically
-  /// deduplicated. Pass [goRouterRouteNames] to list named routes that
-  /// should be skipped by this observer.
+  /// If [observeGoRouter] is also active, all navigator events are
+  /// automatically skipped to avoid double-counting.
   ///
   /// ```dart
   /// GoRouter(
@@ -457,12 +456,8 @@ class Adopture {
   ///   routes: [...],
   /// );
   /// ```
-  static NavigatorObserver navigationObserver({
-    Set<String>? goRouterRouteNames,
-  }) {
-    return AdoptureNavigationObserver(
-      goRouterRouteNames: goRouterRouteNames,
-    );
+  static NavigatorObserver navigationObserver() {
+    return AdoptureNavigationObserver();
   }
 
   // --- Private ---

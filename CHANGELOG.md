@@ -1,3 +1,9 @@
+## 0.1.3
+
+- Fix duplicate screen tracking when both `observeGoRouter()` and `navigationObserver()` are active
+- `NavigationObserver` now automatically skips all events when `GoRouterObserver` is active, preventing double-counting with different separators (e.g. `onboarding-v3/auth` vs `onboarding-v3-auth`)
+- Deprecate `goRouterRouteNames` parameter on `navigationObserver()` — deduplication is now fully automatic
+
 ## 0.1.2
 
 - Fix broken logo image in README — use text header instead
